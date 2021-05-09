@@ -1,10 +1,11 @@
 import logging
 import os
 import string
+import sys
 from email.mime import audio
 from lib2to3.fixes.fix_input import context
 
-import spotipy, base64, json
+import spotipy
 
 from spotipy.oauth2 import SpotifyClientCredentials
 from telegram import Update, ForceReply, ReplyKeyboardMarkup, ReplyKeyboardRemove
@@ -221,7 +222,9 @@ def search(update: Update, _: CallbackContext):
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(os.environ['TOKEN'])
+    PORT = int(os.environ.get('PORT', 5000))
+    TOKEN = os.environ['TOKEN']
+    updater = Updater(TOKEN)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
@@ -251,7 +254,10 @@ def main() -> None:
     dispatcher.add_handler(conv_handler)
 
     # Start the Bot
-    updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(PORT),
+                          url_path=TOKEN)
+    updater.bot.setWebhook('https://audio-bot-kolenka.herokuapp.com/' + TOKEN)
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
@@ -260,4 +266,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    sys.stdout.flush()
     main()
