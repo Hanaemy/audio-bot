@@ -1,4 +1,5 @@
 import logging
+import os
 import string
 from email.mime import audio
 from lib2to3.fixes.fix_input import context
@@ -220,7 +221,7 @@ def search(update: Update, _: CallbackContext):
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater("1746736800:AAEHr00Wfcm1BxiuYd5YcUSZsat6eOsUXn4")
+    updater = Updater(os.environ['TOKEN'])
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
