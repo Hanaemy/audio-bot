@@ -1,2 +1,4 @@
-spotipy
+spotipy~=2.18.0
 python-telegram-bot
+logging~=0.4.9.6
+telegram~=0.0.1

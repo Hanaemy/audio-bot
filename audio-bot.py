@@ -3,9 +3,8 @@ import logging
 import os
 
 import spotipy
-
 from spotipy.oauth2 import SpotifyClientCredentials
-from telegram import Update, ForceReply, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
 
 # Enable logging
@@ -76,7 +75,9 @@ def get_recommendations(update: Update, context: CallbackContext):
 
     for i in items:
         if type(i['preview_url']) is str and type(i['external_urls']['spotify']) is str:
-            update.message.reply_text('UR ARTIST BRO : ' + i['artists'][0]['name'] + '\n' + 'UR TRACK BRO : ' + i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] + '\n' + 'UR LINK BRO : ' + i['external_urls']['spotify'])
+            update.message.reply_text('UR ARTIST BRO : ' + i['artists'][0]['name'] + '\n' + 'UR TRACK BRO : ' +
+                                      i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] + '\n'
+                                      + 'UR LINK BRO : ' + i['external_urls']['spotify'])
     context.user_data['r'] = {}
     context.user_data['d'] = {}
 
@@ -163,7 +164,7 @@ def track(update: Update, context: CallbackContext):
 
 def skip_track(update: Update, context: CallbackContext):
     context.user_data['d']['track'] = 0
-
+    update.message.reply_text('You send nothing - you get nothing')
     return search(update, context)
 
 
@@ -254,26 +255,22 @@ def get_track(name):
 def show_recommendations_for_artist(update: Update, context: CallbackContext):
 
     if len(context.args) > 0:
-        artist = get_artist(context.args[0])
+        artist_recom = get_artist(context.args[0])
         spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-        results = spotify.recommendations(seed_artists=[artist])
+        results = spotify.recommendations(seed_artists=[artist_recom])
         logger.info(results)
-        update.message.reply_text('Recommendations for ' + artist['name'] + ":")
-        for track_rec in results['tracks']:
-            update.message.reply_text(track_rec['artists'][0]['name'])
+        update.message.reply_text('Recommendations for ' + artist_recom['name'] + ":")
+        for track_recom in results['tracks']:
+            update.message.reply_text(track_recom['artists'][0]['name'])
     else:
         update.message.reply_text("vvedi artista ebantyay")
 
 
 def main() -> None:
-    """Start the bot."""
-    # Create the Updater and pass it your bot's token.
     updater = Updater(os.environ['TOKEN'])
 
-    # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
-    # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("rec", show_recommendations_for_artist))
@@ -303,12 +300,8 @@ def main() -> None:
     dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(conv_handler2)
 
-    # Start the Bot
     updater.start_polling()
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
