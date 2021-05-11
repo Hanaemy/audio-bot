@@ -23,6 +23,8 @@ def help_command(update: Update, _: CallbackContext) -> None:
 
 
 def start(update: Update, context: CallbackContext) -> None:
+    context.user_data['r'] = {}
+    context.user_data['d'] = {}
     reply_keyboard = [['/GetMusic', '/GetRecommended']]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
 
@@ -75,6 +77,8 @@ def get_recommendations(update: Update, context: CallbackContext):
     for i in items:
         if type(i['preview_url']) is str and type(i['external_urls']['spotify']) is str:
             update.message.reply_text('UR ARTIST BRO : ' + i['artists'][0]['name'] + '\n' + 'UR TRACK BRO : ' + i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] + '\n' + 'UR LINK BRO : ' + i['external_urls']['spotify'])
+    context.user_data['r'] = {}
+    context.user_data['d'] = {}
 
     return ConversationHandler.END
 
@@ -165,9 +169,9 @@ def skip_track(update: Update, context: CallbackContext):
     return search(update, context)
 
 
-def cancel(update: Update, _: CallbackContext):
-    user = update.message.from_user
-    logger.info("User %s canceled the search.", user.first_name,  update.message.text)
+def cancel(update: Update, context: CallbackContext):
+    context.user_data['r'] = {}
+    context.user_data['d'] = {}
     update.message.reply_text(
         'BAI! I HOPE WE CAN TALK AGAIN SUM DAI.', reply_markup=ReplyKeyboardRemove()
     )
@@ -215,6 +219,8 @@ def search(update: Update, context: CallbackContext):
         if type(i['preview_url']) is str and type(i['external_urls']['spotify']) is str:
             update.message.reply_text('UR TRACK BRO : ' + i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] +
                                       '\n' + 'YUR LINK BRO : ' + i['external_urls']['spotify'])
+    context.user_data['r'] = {}
+    context.user_data['d'] = {}
 
     return ConversationHandler.END
 
