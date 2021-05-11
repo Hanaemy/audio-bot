@@ -84,8 +84,6 @@ def get_recommendations(update: Update, context: CallbackContext):
 
 
 def start2(update: Update, _: CallbackContext) -> int:
-    #reply_keyboard = [['Rock', 'Rap']]
-
     update.message.reply_text(
         'PLZ SEND ME GENRE OR SEND /skip IF U DON\'T WANTS 2.'
     )
