@@ -1,10 +1,8 @@
+import argparse
 import logging
 import os
-import string
-from email.mime import audio
-from lib2to3.fixes.fix_input import context
 
-import spotipy, base64, json
+import spotipy
 
 from spotipy.oauth2 import SpotifyClientCredentials
 from telegram import Update, ForceReply, ReplyKeyboardMarkup, ReplyKeyboardRemove
@@ -19,194 +17,195 @@ logger = logging.getLogger(__name__)
 
 GENRE, ARTIST, ALBUM, TRACK, SEARCH = range(5)
 
-d = {}
-
-# Define a few command handlers. These usually take the two arguments update and
-# context.
-#def start(update: Update, _: CallbackContext) -> None:
-#    """Send a message when the command /start is issued."""
-#    user = update.effective_user
-#    update.message.reply_markdown_v2(
-#        f'Hi {user.mention_markdown_v2()}\!',
-#        reply_markup=ForceReply(selective=True),
-#    )
-
 
 def help_command(update: Update, _: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    update.message.reply_text('Пийшов нахуй')
+    update.message.reply_text('I DON\'T UNDERSTAND U, PLZ SEND /help WAN MOAR TIEM')
 
 
-def echo(update: Update, _: CallbackContext) -> None:
-    """Echo the user message."""
-    update.message.reply_text(update.message.text)
+def start(update: Update, context: CallbackContext) -> None:
+    reply_keyboard = [['/GetMusic', '/GetRecommended']]
+    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
+
+    update.message.reply_text("OH HAI! IM AUDIO BOT. I CAN HALP U WIF MUSIC SEARCH. PLZ, CHOOSE, WUT DO U WANTS:"
+                              "GIT RECOMMENDD MUSIC BY EXAMPLE TRACK OR ARTIST:"
+                              "GIT SIMPLE MUSIC SEARCH BY GENRE, ARTIST, ALBUM AN TRACK", reply_markup=markup)
 
 
-def test(update: Update, context: CallbackContext) -> None:
+def start3(update: Update, _: CallbackContext) -> int:
+    update.message.reply_text(
+        'PLZ, SEND ARTIST OR SUM ARTISTZ, AT FURST'
+    )
+
+    return ARTIST
+
+
+def artist_rec(update: Update, context: CallbackContext) -> int:
+    context.user_data['r']['artist'] = update.message.text.split(',')
+    update.message.reply_text('NAO, PLZ SEND ME TRACK OR SUM TRACKZ')
+
+    return TRACK
+
+
+def track_rec(update: Update, context: CallbackContext):
+    context.user_data['r']['track'] = update.message.text.split(',')
+
+    return get_recommendations(update, context)
+
+
+def get_recommendations(update: Update, context: CallbackContext):
     spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    artist = context.args[0]
-    results = spotify.search(q='artist:' + artist, type='artist', limit=2)
-    items = results['artists']['items']
+    ids = {'artist': [], 'track': []}
 
-    update.message.reply_text(items)
-    update.message.reply_text(spotify.me())
+    for i in range(0, len(context.user_data['r']['artist'])):
+        if len(context.user_data['r']['artist']) + len(context.user_data['r']['track']) > 5:
+            if len(ids['artist']) >= 2:
+                break
+        ids['artist'].append(get_artist(context.user_data['r']['artist'][i]))
 
+    for i in range(0, len(context.user_data['r']['track'])):
+        if len(context.user_data['r']['artist']) + len(context.user_data['r']['track']) > 5:
+            if len(ids['track']) >= 2:
+                break
+        ids['track'].append(get_track(context.user_data['r']['track'][i]))
 
-    #while results['next']:
-     #   results = spotify.next(results)
-      #  albums.extend(results['items'])
-    #for album in albums:
-     #   update.message.reply_text(album['name'])
+    results = spotify.recommendations(seed_tracks=ids['track'], seed_artists=ids['artist'], limit=10)
+
+    items = results['tracks']
+
+    for i in items:
+        if type(i['preview_url']) is str and type(i['external_urls']['spotify']) is str:
+            update.message.reply_text('UR ARTIST BRO : ' + i['artists'][0]['name'] + '\n' + 'UR TRACK BRO : ' + i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] + '\n' + 'UR LINK BRO : ' + i['external_urls']['spotify'])
+
+    return ConversationHandler.END
 
 
 def start2(update: Update, _: CallbackContext) -> int:
     #reply_keyboard = [['Rock', 'Rap']]
 
     update.message.reply_text(
-        'Hi! My name is Audio Bot. I will help you find music. '
-        'Please send me a genre or send /skip if you don\'t want to.'#,
-        #reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        'PLZ SEND ME GENRE OR SEND /skip IF U DON\'T WANTS 2.'
     )
 
     return GENRE
 
 
-def genre(update: Update, _: CallbackContext) -> int:
+def genre(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("Genre of %s: %s", user.first_name, update.message.text)
-    d['genre'] = update.message.text
+    context.user_data['d']['genre'] = update.message.text
     update.message.reply_text(
-        'I see! Please send me a artist or send /skip if you don\'t want to.'#,
-       # reply_markup=ReplyKeyboardRemove(),
+        'PLZ SEND ME ARTIST OR SEND /skip IF U DON\'T WANTS 2.'
     )
 
     return ARTIST
 
 
-def skip_genre(update: Update, _: CallbackContext) -> int:
+def skip_genre(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("User %s did not send a genre.", user.first_name)
-    d['genre'] = 0
+    context.user_data['d']['genre'] = 0
     update.message.reply_text(
-        'Now, send me artist please, or send /skip.'
+        'NAO, SEND ME ARTIST PLZ, OR SEND /skip.'
     )
 
     return ARTIST
 
 
-def artist(update: Update, _: CallbackContext) -> int:
-    user = update.message.from_user
-    #spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    #album = context.args[0]
-    d['artist'] = update.message.text
-    #results = spotify.search(q='album:' + album, type='album', limit=2)
-    #items = results['albums']['items']
-    logger.info("Album of %s: %s", user.first_name)
-    update.message.reply_text('Gorgeous! Now, send me album please, or send /skip if you don\'t want to.')
-
-
-    #update.message.reply_text(items)
-    #update.message.reply_text(spotify.me())
-
+def artist(update: Update, context: CallbackContext) -> int:
+    context.user_data['d']['artist'] = update.message.text
+    update.message.reply_text('NICE! SEND ME ALBUM PLZ, OR SEND /skip IF U DON\T WANTS 2.')
     return ALBUM
 
 
-def skip_artist(update: Update, _: CallbackContext) -> int:
+def skip_artist(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("User %s did not send a album.", user.first_name)
-    d['artist'] = 0
+    context.user_data['d']['artist'] = 0
     update.message.reply_text(
-        'Now, send me album please, or send /skip.'
+        'NAO, SEND ME ALBUM PLZ, OR SEND /skip.'
     )
 
     return ALBUM
 
 
-def album(update: Update, _: CallbackContext) -> int:
+def album(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
-    d['album'] = update.message.text
+    context.user_data['d']['album'] = update.message.text
     logger.info(
         "Album of %s: %f / %f", user.first_name,  update.message.text)
     update.message.reply_text(
-        'Please, send a track'
+        'AT LAST, PLZ, SEND TRACK'
     )
 
     return TRACK
 
 
-def skip_album(update: Update, _: CallbackContext) -> int:
+def skip_album(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
-    d['album'] = 0
+    context.user_data['d']['album'] = 0
     logger.info("User %s did not send album.", user.first_name)
     update.message.reply_text(
-        'You seem a bit paranoid! At last, send me a track or send /skip'
+        'I C, SEND ME TRACK PLZ OR SEND /skip'
     )
 
     return TRACK
 
 
-def track(update: Update, _: CallbackContext):
+def track(update: Update, context: CallbackContext):
     user = update.message.from_user
     logger.info("Track of %s: %s", user.first_name,  update.message.text)
-    d['track'] = update.message.text
+    context.user_data['d']['track'] = update.message.text
 
-    return search(update, _)
+    return search(update, context)
 
 
-def skip_track(update: Update, _: CallbackContext):
-    user = update.message.from_user
-    d['track'] = 0
-    logger.info("User %s did not send album.", user.first_name)
-    update.message.reply_text(
-        'Screw you guys, Im going home.'
-    )
+def skip_track(update: Update, context: CallbackContext):
+    context.user_data['d']['track'] = 0
 
-    return search(update, _)
+    return search(update, context)
 
 
 def cancel(update: Update, _: CallbackContext):
     user = update.message.from_user
     logger.info("User %s canceled the search.", user.first_name,  update.message.text)
     update.message.reply_text(
-        'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove()
+        'BAI! I HOPE WE CAN TALK AGAIN SUM DAI.', reply_markup=ReplyKeyboardRemove()
     )
 
     return ConversationHandler.END
 
 
-def search(update: Update, _: CallbackContext):
+def search(update: Update, context: CallbackContext):
     spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    #genre = str_replace(d['genre'])
-    #q = 'genre:' + genre
     q = ''
 
-    if d['genre'] == 0:
+    if context.user_data['d']['genre'] == 0:
         genre = ''
     else:
-        genre = d['genre']
+        genre = context.user_data['d']['genre']
         q = q + 'genre:' + genre
 
-    if d['artist'] == 0:
+    if context.user_data['d']['artist'] == 0:
         artist = ''
     else:
-        artist = d['artist']
+        artist = context.user_data['d']['artist']
         q = q + ' artist:' + artist
 
-    if d['album'] == 0:
+    if context.user_data['d']['album'] == 0:
         album = ''
     else:
-        album = d['album']
+        album = context.user_data['d']['album']
         q = q + ' album:' + album
 
-    if d['track'] == 0:
+    if context.user_data['d']['track'] == 0:
         track = ''
     else:
-        track = d['track']
+        track = context.user_data['d']['track']
         q = q + ' track:' + track
 
     print(q)
 
-    results = spotify.search(q=q, type='track', limit=1)
+    results = spotify.search(q=q, type='track', limit=10)
 
     print(results)
 
@@ -214,9 +213,53 @@ def search(update: Update, _: CallbackContext):
 
     for i in items:
         if type(i['preview_url']) is str and type(i['external_urls']['spotify']) is str:
-            update.message.reply_text('track : ' + i['name'] + '\n' + 'sample : ' + i['preview_url'] + '\n' + 'link : ' + i['external_urls']['spotify'])
+            update.message.reply_text('UR TRACK BRO : ' + i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] +
+                                      '\n' + 'YUR LINK BRO : ' + i['external_urls']['spotify'])
 
     return ConversationHandler.END
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Recommendations for the '
+                                     'given artist')
+    parser.add_argument('-a', '--artist', required=True, help='Name of Artist')
+    return parser.parse_args()
+
+
+def get_artist(name):
+    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    results = spotify.search(q='artist:' + name, type='artist')
+    items = results['artists']['items']
+    if len(items) > 0:
+        return items[0]['id']
+    else:
+        return None
+
+
+def get_track(name):
+    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    results = spotify.search(q='track:' + name, type='track')
+    print(results)
+    items = results['tracks']['items']
+    if len(items) > 0:
+        return items[0]['id']
+    else:
+        return None
+
+
+def show_recommendations_for_artist(update: Update, context: CallbackContext):
+
+    if len(context.args) > 0:
+        artist = get_artist(context.args[0])
+        spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+        results = spotify.recommendations(seed_artists=[artist])
+        logger.info(results)
+        update.message.reply_text('Recommendations for ' + artist['name'] + ":")
+        for track_rec in results['tracks']:
+            update.message.reply_text(track_rec['artists'][0]['name'])
+    else:
+        update.message.reply_text("vvedi artista ebantyay")
+
 
 def main() -> None:
     """Start the bot."""
@@ -227,17 +270,12 @@ def main() -> None:
     dispatcher = updater.dispatcher
 
     # on different commands - answer in Telegram
-    #dispatcher.add_handler(CommandHandler("start", start))
-    #dispatcher.add_handler(CommandHandler("start2", start2))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("test", test))
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("rec", show_recommendations_for_artist))
 
-    # on non command i.e message - echo the message on Telegram
-    #dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
-
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start2", start2)],
+        entry_points=[CommandHandler("GetMusic", start2)],
         states={
             GENRE: [MessageHandler(Filters.text & ~Filters.command, genre), CommandHandler("skip", skip_genre)],
             ARTIST: [MessageHandler(Filters.text & ~Filters.command, artist), CommandHandler("skip", skip_artist)],
@@ -248,7 +286,18 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
+    conv_handler2 = ConversationHandler(
+        entry_points=[CommandHandler("GetRecommended", start3)],
+        states={
+            ARTIST: [MessageHandler(Filters.text & ~Filters.command, artist_rec), CommandHandler("skip", skip_artist)],
+            TRACK: [MessageHandler(Filters.text & ~Filters.command, track_rec), CommandHandler("skip", skip_track)],
+            SEARCH: [get_recommendations],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+
     dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(conv_handler2)
 
     # Start the Bot
     updater.start_polling()
