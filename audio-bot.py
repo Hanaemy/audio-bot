@@ -23,15 +23,15 @@ def help_command(update: Update, _: CallbackContext) -> None:
 def start(update: Update, context: CallbackContext) -> None:
     context.user_data['r'] = {}
     context.user_data['d'] = {}
-    reply_keyboard = [['/GetMusic', '/GetRecommended']]
+    reply_keyboard = [['/getmusic', '/getrecommended']]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
 
     update.message.reply_text("OH HAI! IM AUDIO BOT. I CAN HALP U WIF MUSIC SEARCH. PLZ, CHOOSE, WUT DO U WANTS:"
-                              "GIT RECOMMENDD MUSIC BY EXAMPLE TRACK OR ARTIST:"
-                              "GIT SIMPLE MUSIC SEARCH BY GENRE, ARTIST, ALBUM AN TRACK", reply_markup=markup)
+                              "/getrecommended MUSIC BY EXAMPLE TRACK OR ARTIST:"
+                              "/getmusic SEARCH BY GENRE, ARTIST, ALBUM AN TRACK", reply_markup=markup)
 
 
-def start3(update: Update, _: CallbackContext) -> int:
+def getrecommended(update: Update, _: CallbackContext) -> int:
     update.message.reply_text(
         'PLZ, SEND ARTIST OR SUM ARTISTZ, AT FURST'
     )
@@ -83,7 +83,7 @@ def get_recommendations(update: Update, context: CallbackContext):
     return ConversationHandler.END
 
 
-def start2(update: Update, _: CallbackContext) -> int:
+def getmusic(update: Update, _: CallbackContext) -> int:
     update.message.reply_text(
         'PLZ SEND ME GENRE OR SEND /skip IF U DON\'T WANTS 2.'
     )
@@ -275,7 +275,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("rec", show_recommendations_for_artist))
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("GetMusic", start2)],
+        entry_points=[CommandHandler("getmusic", getmusic)],
         states={
             GENRE: [MessageHandler(Filters.text & ~Filters.command, genre), CommandHandler("skip", skip_genre)],
             ARTIST: [MessageHandler(Filters.text & ~Filters.command, artist), CommandHandler("skip", skip_artist)],
@@ -287,7 +287,7 @@ def main() -> None:
     )
 
     conv_handler2 = ConversationHandler(
-        entry_points=[CommandHandler("GetRecommended", start3)],
+        entry_points=[CommandHandler("getrecommended", getrecommended)],
         states={
             ARTIST: [MessageHandler(Filters.text & ~Filters.command, artist_rec), CommandHandler("skip", skip_artist)],
             TRACK: [MessageHandler(Filters.text & ~Filters.command, track_rec), CommandHandler("skip", skip_track)],
