@@ -17,23 +17,31 @@ GENRE, ARTIST, ALBUM, TRACK, SEARCH = range(5)
 
 
 def help_command(update: Update, _: CallbackContext) -> None:
-    update.message.reply_text('I DON\'T UNDERSTAND U, PLZ SEND /help WAN MOAR TIEM')
+    update.message.reply_text('Если что-то пошло не так - отправьте /cancel и попробуйте еще раз. Извините, я работаю над тем, чтобы это исправить.'
+                              ' Если это не сработало - напишите мне об этом @Hanaemy, и я постараюсь помочь вам как можно скорее.'
+                              ' Так же, пожалуйста, не используйте русский язык в запросах - Spotify плохо его понимает,'
+                              ' если вам нужен русский исполнитель - напишите транслитом.')
 
 
 def start(update: Update, context: CallbackContext) -> None:
     context.user_data['r'] = {}
     context.user_data['d'] = {}
-    reply_keyboard = [['/getmusic', '/getrecommended']]
+    reply_keyboard = [['/getmusic', '/getrecommended'], ['/help', '/cancel']]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
 
-    update.message.reply_text("OH HAI! IM AUDIO BOT. I CAN HALP U WIF MUSIC SEARCH. PLZ, CHOOSE, WUT DO U WANTS:"
-                              "/getrecommended MUSIC BY EXAMPLE TRACK OR ARTIST:"
-                              "/getmusic SEARCH BY GENRE, ARTIST, ALBUM AN TRACK", reply_markup=markup)
+    update.message.reply_text("Привет, я Аудио Бот, я помогу тебе подобрать музыку,"
+                              " пожалуйста, выбери, что бы ты хотел:"
+                              " /getrecommended - подобрать несколько треков, основываясь на выбранном артисте"
+                              " или нескольких артистах, а так же треке или нескольким трекам"
+                              " /getmusic поиск музыки по жанру, исполнителю, альбому и треку."
+                              " Если нужна помощь - нажми /help."
+                              " Если что-то пошло не так или ты просто передумал - нажми /cancel, чтобы завершить текущую операцию."
+                              " Пожалуйста, используйте в запросах английский язык или напишите translitom", reply_markup=markup)
 
 
 def getrecommended(update: Update, _: CallbackContext) -> int:
     update.message.reply_text(
-        'PLZ, SEND ARTIST OR SUM ARTISTZ, AT FURST'
+        'Пожалуйста, введи исполнителя или нескольких исполнителей, через запятую'
     )
 
     return ARTIST
@@ -41,7 +49,7 @@ def getrecommended(update: Update, _: CallbackContext) -> int:
 
 def artist_rec(update: Update, context: CallbackContext) -> int:
     context.user_data['r']['artist'] = update.message.text.split(',')
-    update.message.reply_text('NAO, PLZ SEND ME TRACK OR SUM TRACKZ')
+    update.message.reply_text('Теперь введи трек или несколько треков, через запятую')
 
     return TRACK
 
@@ -85,7 +93,7 @@ def get_recommendations(update: Update, context: CallbackContext):
 
 def getmusic(update: Update, _: CallbackContext) -> int:
     update.message.reply_text(
-        'PLZ SEND ME GENRE OR SEND /skip IF U DON\'T WANTS 2.'
+        'Пожалуйста, введи жанр или нажми /skip, чтобы пропустить этот шаг.'
     )
 
     return GENRE
@@ -96,7 +104,7 @@ def genre(update: Update, context: CallbackContext) -> int:
     logger.info("Genre of %s: %s", user.first_name, update.message.text)
     context.user_data['d']['genre'] = update.message.text
     update.message.reply_text(
-        'PLZ SEND ME ARTIST OR SEND /skip IF U DON\'T WANTS 2.'
+        'Пожалуйста, введи исполнителя или нажми /skip, чтобы пропустить этот шаг.'
     )
 
     return ARTIST
@@ -107,7 +115,7 @@ def skip_genre(update: Update, context: CallbackContext) -> int:
     logger.info("User %s did not send a genre.", user.first_name)
     context.user_data['d']['genre'] = 0
     update.message.reply_text(
-        'NAO, SEND ME ARTIST PLZ, OR SEND /skip.'
+        'Пожалуйста, введи исполнителя или нажми /skip, чтобы пропустить этот шаг.'
     )
 
     return ARTIST
@@ -115,7 +123,7 @@ def skip_genre(update: Update, context: CallbackContext) -> int:
 
 def artist(update: Update, context: CallbackContext) -> int:
     context.user_data['d']['artist'] = update.message.text
-    update.message.reply_text('NICE! SEND ME ALBUM PLZ, OR SEND /skip IF U DON\T WANTS 2.')
+    update.message.reply_text('Пожалуйста, введи альбом или нажми /skip, чтобы пропустить этот шаг.')
     return ALBUM
 
 
@@ -124,7 +132,7 @@ def skip_artist(update: Update, context: CallbackContext) -> int:
     logger.info("User %s did not send a album.", user.first_name)
     context.user_data['d']['artist'] = 0
     update.message.reply_text(
-        'NAO, SEND ME ALBUM PLZ, OR SEND /skip.'
+        'Пожалуйста, введи альбом или нажми /skip, чтобы пропустить этот шаг.'
     )
 
     return ALBUM
@@ -136,7 +144,7 @@ def album(update: Update, context: CallbackContext) -> int:
     logger.info(
         "Album of %s: %f / %f", user.first_name,  update.message.text)
     update.message.reply_text(
-        'AT LAST, PLZ, SEND TRACK'
+        'Пожалуйста, введи название трека'
     )
 
     return TRACK
@@ -147,7 +155,7 @@ def skip_album(update: Update, context: CallbackContext) -> int:
     context.user_data['d']['album'] = 0
     logger.info("User %s did not send album.", user.first_name)
     update.message.reply_text(
-        'I C, SEND ME TRACK PLZ OR SEND /skip'
+        'Пожалуйста, введи название трека или нажми /skip, чтобы пропустить этот шаг.'
     )
 
     return TRACK
@@ -171,7 +179,7 @@ def cancel(update: Update, context: CallbackContext):
     context.user_data['r'] = {}
     context.user_data['d'] = {}
     update.message.reply_text(
-        'BAI! I HOPE WE CAN TALK AGAIN SUM DAI.', reply_markup=ReplyKeyboardRemove()
+        'Пока! Буду рад помочь тебе снова!', reply_markup=ReplyKeyboardRemove()
     )
 
     return ConversationHandler.END
