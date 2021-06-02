@@ -82,9 +82,9 @@ def get_recommendations(update: Update, context: CallbackContext):
 
     for i in items:
         if type(i['preview_url']) is str and type(i['external_urls']['spotify']) is str:
-            update.message.reply_text('UR ARTIST BRO : ' + i['artists'][0]['name'] + '\n' + 'UR TRACK BRO : ' +
-                                      i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] + '\n'
-                                      + 'UR LINK BRO : ' + i['external_urls']['spotify'])
+            update.message.reply_text('Исполнитель : ' + i['artists'][0]['name'] + '\n' + 'Трек : ' +
+                                      i['name'] + '\n' + 'Сэмпл : ' + i['preview_url'] + '\n'
+                                      + 'Ссылка на трек : ' + i['external_urls']['spotify'])
     context.user_data['r'] = {}
     context.user_data['d'] = {}
 
@@ -223,8 +223,8 @@ def search(update: Update, context: CallbackContext):
 
     for i in items:
         if type(i['preview_url']) is str and type(i['external_urls']['spotify']) is str:
-            update.message.reply_text('UR TRACK BRO : ' + i['name'] + '\n' + 'UR SAMPLE BRO : ' + i['preview_url'] +
-                                      '\n' + 'YUR LINK BRO : ' + i['external_urls']['spotify'])
+            update.message.reply_text('Трек : ' + i['name'] + '\n' + 'Сэмпл : ' + i['preview_url'] +
+                                      '\n' + 'Ссылка на трек в Spotify : ' + i['external_urls']['spotify'])
     context.user_data['r'] = {}
     context.user_data['d'] = {}
 
