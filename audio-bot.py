@@ -178,9 +178,7 @@ def skip_track(update: Update, context: CallbackContext):
 def cancel(update: Update, context: CallbackContext):
     context.user_data['r'] = {}
     context.user_data['d'] = {}
-    update.message.reply_text(
-        'Пока! Буду рад помочь тебе снова!', reply_markup=ReplyKeyboardRemove()
-    )
+    update.message.reply_text('Пока! Буду рад помочь тебе снова!', reply_markup=ReplyKeyboardRemove())
 
     return ConversationHandler.END
 
